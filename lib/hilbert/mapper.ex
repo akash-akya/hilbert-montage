@@ -1,7 +1,5 @@
 defmodule Hilbert.Mapper do
-  alias Hilbert.Montage
-
-  def map(res) do
+  def hilbert_sequence(res) do
     mapping =
       0..(res * res - 1)
       |> Enum.map(fn n -> {pos(n, res), n + 1} end)
@@ -10,6 +8,10 @@ defmodule Hilbert.Mapper do
     Enum.flat_map(0..(res - 1), fn x ->
       Enum.map(0..(res - 1), &mapping[{x, &1}])
     end)
+  end
+
+  def normal_sequence(res) do
+    1..(res * res) |> Enum.to_list()
   end
 
   defp flip({y, x}, _res), do: {x, y}
