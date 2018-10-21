@@ -10,8 +10,8 @@ defmodule Hilbert.Mapper do
     end)
   end
 
-  def normal_sequence(res) do
-    1..(res * res) |> Enum.to_list()
+  def natural_sequence(count) do
+    1..count |> Enum.to_list()
   end
 
   defp flip({y, x}, _res), do: {x, y}

@@ -4,15 +4,16 @@ defmodule Hilbert.Processor do
   alias Hilbert.Ffmpeg
   alias Hilbert.Utils
   @resolution 64
+  @bar_count 500
 
   def process([video, output]) do
     video = abs_path(video)
     temp_dir = create_temp()
 
-    frames_count = @resolution * @resolution
+    square_frames_count = @resolution * @resolution
 
     Utils.log("Creating frames")
-    Ffmpeg.create_frames(video, frames_count, temp_dir)
+    :ok = Ffmpeg.create_frames(video, square_frames_count, @bar_count, temp_dir)
 
     Utils.log("Creating montage")
 
@@ -21,7 +22,7 @@ defmodule Hilbert.Processor do
 
       :ok =
         Mapper.hilbert_sequence(@resolution)
-        |> Enum.map(&normalize(&1))
+        |> Enum.map(&"square_#{&1}.bmp")
         |> Montage.create(output, temp_dir)
     end)
 
@@ -29,9 +30,18 @@ defmodule Hilbert.Processor do
       output = abs_path("./#{output}_normal.jpg")
 
       :ok =
-        Mapper.normal_sequence(@resolution)
-        |> Enum.map(&normalize(&1))
+        Mapper.natural_sequence(@resolution * @resolution)
+        |> Enum.map(&"square_#{&1}.bmp")
         |> Montage.create(output, temp_dir)
+    end)
+
+    Utils.measure("creating barcode montage", fn ->
+      output = abs_path("./#{output}_bar.jpg")
+
+      :ok =
+        Mapper.natural_sequence(@bar_count)
+        |> Enum.map(&"bar_#{&1}.bmp")
+        |> Montage.create_bar_montage(output, temp_dir)
     end)
 
     delete_temp(temp_dir)
@@ -49,14 +59,7 @@ defmodule Hilbert.Processor do
     dir
   end
 
-  defp delete_temp(dir) do
-    _removed = File.rm_rf!(dir)
-  end
-
-  defp normalize(num) do
-    "#{num}.jpg"
-    # String.pad_leading("#{num}", 4, "0") <> ".jpg"
-  end
+  defp delete_temp(dir), do: File.rm_rf!(dir)
 
   def abs_path(path), do: Path.expand(path) |> Path.absname()
 end
